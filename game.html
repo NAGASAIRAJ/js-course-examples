@@ -11,23 +11,27 @@
 <body onload="startGame()">
 
     <canvas id="canvas"></canvas>
-    
+    <br>
+    <button onmousedown="accelerate(-0.2)" onmouseup="accelerate(0.1)">Accelerate</button>
 <script>
     
 var birdComponent;
-
-function startGame(){
-    gameArea.start();
+var obstacles = [];
+//var score;
     
-    birdComponent = new component(45, 45, "red", 20, 30);
+function startGame(){
+    birdComponent = new component(40, 40, "red", 20, 30);
     birdComponent.gravity = 0.1;
+    gameArea.start();
 }
 var gameArea = {
     canvas: document.getElementById("canvas"),
     start: function(){
-        this.canvas.width = 500;
-        this.canvas.height = 300;
+        this.canvas.width = 800;
+        this.canvas.height = 400;
         this.context = this.canvas.getContext('2d');
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
         this.interval = setInterval(updateGameArea, 20);
     },
     clear: function(){
@@ -46,17 +50,17 @@ function component(width, height, color, x, y, type){
     this.speedY = 0;
     this.gravity = 0;
     this.gravitySpeed = 0;
-    this.updateBird = function(){
+    this.update = function(){
         var ctx = gameArea.context;
         ctx.fillStyle = color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
     };
     this.newPosition = function(){
-        console.log(this.gravity);
+        //console.log(this.gravity);
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
-        console.log(this.x +" "+ this.y);
+        //console.log(this.x +" "+ this.y);
         this.hitBottom();
     }
     this.hitBottom = function(){
@@ -66,15 +70,52 @@ function component(width, height, color, x, y, type){
             this.gravityspeed = 0;
         }
     }
+    /*
+    this.crashWith =funtion(otherobj)
+    */
 
 }
 
 function updateGameArea(){
-    birdComponent.newPosition();
+    
+    var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+    for(i=0; i<obstacles.length; i++){
+        // crash with obstacles
+    }
     gameArea.clear();
-    birdComponent.updateBird();
+    gameArea.frameNo += 1; // incrementing frame
+    if(gameArea.frameNo == 1 || everyinterval(150)){
+        x = gameArea.canvas.width;
+        minHeight = 20;
+        maxHeight = 200;
+        height = Math.floor(Math.random() * (maxHeight-minHeight+1) + minHeight);
+        // 181 * 0.1 = 2.8 +20 = 22
+        minGap = 50;
+        maxGap = 200;
+        gap = Math.floor(Math.random()*(maxGap-minGap+1) + minGap);
+        obstacles.push(new component(10, height, "green", x, 0));
+        obstacles.push(new component(10, x - height-gap , "green", x , height+gap));   
+    }
+    
+    for(i = 0; i<obstacles.length; i++){
+        obstacles[i].x += -1;
+        obstacles[i].update();
+    }
+    
+    birdComponent.newPosition();
+    birdComponent.update();
+}
+function everyinterval(n){
+    if((gameArea.frameNo / n) % 1 == 0){
+        return true;
+    }
+    return false;
 }
 
+function accelerate(n){
+    //console.log("fly");
+    birdComponent.gravity = n;
+}
 
 </script>
 </body>
