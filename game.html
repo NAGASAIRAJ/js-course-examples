@@ -9,25 +9,45 @@
     </style>
 </head>
 <body onload="startGame()">
-
+    <img id="bird-img" src="http://clipart-library.com/images/yTkKdyq8c.png" width="25px" height="25px" />
     <canvas id="canvas"></canvas>
     <br>
-    <button onmousedown="accelerate(-0.2)" onmouseup="accelerate(0.1)">Accelerate</button>
+    
+    <button onclick=restartGame()>Restart Game</button>
+    <h3>Press spacebar to fly</h3>
 <script>
     
 var birdComponent;
 var obstacles = [];
-//var score;
+var scoreComponent;
+    
+document.body.onkeyup = function(e){
+    if(e.keyCode == 32){
+        console.log("hello");
+       accelerate(0.05); 
+    }
+}
+document.body.onkeydown = function(e){
+    if(e.keyCode == 32){
+        console.log("hello");
+       accelerate(-0.2);
+    }
+}
+    
+function restartGame(){
+    location.reload();
+}
     
 function startGame(){
-    birdComponent = new component(40, 40, "red", 20, 30);
-    birdComponent.gravity = 0.1;
+    birdComponent = new component(25, 25, "red", 20, 30);
+    birdComponent.gravity = 0.05;
+    scoreComponent = new component("30px","Consolas", "black", 400, 30, "text");
     gameArea.start();
 }
 var gameArea = {
     canvas: document.getElementById("canvas"),
     start: function(){
-        this.canvas.width = 800;
+        this.canvas.width = 600;
         this.canvas.height = 400;
         this.context = this.canvas.getContext('2d');
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
@@ -41,6 +61,8 @@ var gameArea = {
 }
 
 function component(width, height, color, x, y, type){
+    this.type = type;
+    this.score = 0;
     this.width = width;
     this.height = height;
     this.color = color;
@@ -52,8 +74,16 @@ function component(width, height, color, x, y, type){
     this.gravitySpeed = 0;
     this.update = function(){
         var ctx = gameArea.context;
-        ctx.fillStyle = color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        if(this.type == "text"){
+            ctx.font = this.width + " "+ this.height;
+            ctx.fillStyle = color;
+            ctx.fillText(this.text, this.x, this.y);
+        }
+        else{
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height); 
+        }
+        
     };
     this.newPosition = function(){
         //console.log(this.gravity);
@@ -70,10 +100,25 @@ function component(width, height, color, x, y, type){
             this.gravityspeed = 0;
         }
     }
-    /*
-    this.crashWith =funtion(otherobj)
-    */
-
+    
+    this.crashWith =function(otherobj){
+        var myleft = this.x;
+        var myright = this.x + this.width;
+        var mytop = this.y;
+        var mybottom = this.y + this.height;
+        
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + otherobj.width;
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + otherobj.height;
+        
+        var crash = true;
+        
+        if((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft >otherright)){
+            crash = false;
+        }
+        return crash;
+    }
 }
 
 function updateGameArea(){
@@ -81,6 +126,9 @@ function updateGameArea(){
     var x, height, gap, minHeight, maxHeight, minGap, maxGap;
     for(i=0; i<obstacles.length; i++){
         // crash with obstacles
+        if(birdComponent.crashWith(obstacles[i])){
+            return;
+        }   
     }
     gameArea.clear();
     gameArea.frameNo += 1; // incrementing frame
@@ -102,6 +150,8 @@ function updateGameArea(){
         obstacles[i].update();
     }
     
+    scoreComponent.text = "SCORE: "+gameArea.frameNo;
+    scoreComponent.update();
     birdComponent.newPosition();
     birdComponent.update();
 }
@@ -113,7 +163,6 @@ function everyinterval(n){
 }
 
 function accelerate(n){
-    //console.log("fly");
     birdComponent.gravity = n;
 }
 
